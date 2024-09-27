@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('checkout Code') {
+            steps {
+                git branch: 'dev', url: 'https://github.com/asadrazatkxel/snap-shot-reactjs-app.git'
+            }
+        }
+        stage('Code Analysis') {
+            environment {
+                scannerHome = tool name: 'sonar'
+            }    
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh """
+                        ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=sonar-project \
+                            -Dsonar.projectName=sonar-key \
+                            -Dsonar.sources=.
+                        """
+                        
+                }
+            }
+        }
+        
+    }
+}
