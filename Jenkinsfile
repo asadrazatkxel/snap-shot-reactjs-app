@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Replace these with your actual environment variables for SonarQube and DockerHub
         SONARQUBE_SERVER = 'sonar'
-        SONARQUBE_SCANNER = 'sonar'
+        SONARQUBE_SCANNER = 'sonar-scanner'
         DOCKER_IMAGE = 'your-dockerhub-username/your-app-name'
         DOCKER_CREDENTIALS_ID = 'your-docker-credentials-id'
     }
