@@ -2,27 +2,37 @@ pipeline {
     agent any
 
     environment {
-        // Define environment variables
-        DOCKER_IMAGE = 'myproject-image'
-        SONARQUBE_SERVER = 'SonarQube'
+        // Replace these with your actual environment variables for SonarQube and DockerHub
+        SONARQUBE_SERVER = 'your-sonarqube-server'
+        SONARQUBE_SCANNER = 'SonarQube-Scanner'
+        DOCKER_IMAGE = 'your-dockerhub-username/your-app-name'
+        DOCKER_CREDENTIALS_ID = 'your-docker-credentials-id'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                // Check out the code from the GitHub repository using credentials
-                git branch: 'main',
-                    credentialsId: '72e9ec77-de97-4fdf-b411-c35e28dd6280', // Add Jenkins credentials ID here
-                    url: 'https://github.com/asadrazatkxel/snap-shot-reactjs-app.git'
+                echo 'Fetching code from Git...'
+                // Replace with your Git repo URL
+                git branch: 'dev', url: 'git@github.com:asadrazatkxel/snap-shot-reactjs-app.git'
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('SonarQube Scan') {
             steps {
+                echo 'Running SonarQube scan...'
                 script {
-                    // Run SonarQube analysis on the code
-                    withSonarQubeEnv('SonarQube') {
-                        sh 'mvn clean verify sonar:sonar'
+                    // Ensure SonarQube is installed and configured
+                    withSonarQubeEnv(SONARQUBE_SERVER) {
+                        sh """
+                        ${SONARQUBE_SCANNER} \
+                        -Dsonar.projectKey=sonar \
+                        -Dsonar.projectName=sonar \
+                        -Dsonar.sources=./src \
+                        -Dsonar.language=js \
+                        -Dsonar.sourceEncoding=UTF-8 \
+                        -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+                        """
                     }
                 }
             }
@@ -30,11 +40,21 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
+                echo 'Building Docker image...'
                 script {
-                    // Build the Docker image from the Dockerfile
-                    sh '''
-                    docker build -t ${DOCKER_IMAGE} .
-                    '''
+                    sh 'docker build -t ${DOCKER_IMAGE}:latest .'
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo 'Pushing Docker image to DockerHub...'
+                script {
+                    withCredentials([usernamePassword(credentialsId: DOCKER_CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        sh 'docker push ${DOCKER_IMAGE}:latest'
+                    }
                 }
             }
         }
@@ -42,8 +62,8 @@ pipeline {
 
     post {
         always {
-            // Clean up resources or perform actions after the pipeline
-            echo "Pipeline completed!"
+            echo 'Pipeline finished'
+            cleanWs() // Clean workspace after build
         }
     }
 }
