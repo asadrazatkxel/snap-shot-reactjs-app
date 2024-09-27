@@ -10,8 +10,10 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                // Check out the code from the GitHub repository
-                git branch: 'main', url: 'https://github.com/asadrazatkxel/snap-shot-reactjs-app.git'
+                // Check out the code from the GitHub repository using credentials
+                git branch: 'main',
+                    credentialsId: 'your-jenkins-credentials-id', // Add Jenkins credentials ID here
+                    url: 'https://github.com/asadrazatkxel/snap-shot-reactjs-app.git'
             }
         }
 
